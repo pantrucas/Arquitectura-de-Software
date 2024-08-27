@@ -1,0 +1,39 @@
+server:
+  http_config:
+    server:
+      port: 9080
+
+positions:
+  filename: /var/log/positions.yaml
+
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*.log
+
+  - job_name: fastapi_service_1
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: container
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        action: keep
+      - source_labels: [__meta_docker_container_name]
+        target_label: job
+
+  - job_name: fastapi_service_2
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: container
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        action: keep
+      - source_labels: [__meta_docker_container_name]
+        target_label: job
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push

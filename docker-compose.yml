@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  service_1:
+    build:
+      context: ./fastapi_service_1
+    ports:
+      - "8001:8000"
+    logging:
+      driver: json-file
+
+  service_2:
+    build:
+      context: ./fastapi_service_2
+    ports:
+      - "8002:8000"
+    logging:
+      driver: json-file
+
+  promtail:
+    image: grafana/promtail:2.7.0
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - /var/log:/var/log
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:2.8.0
+    ports:
+      - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:9.2.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+
